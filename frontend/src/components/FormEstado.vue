@@ -9,7 +9,7 @@
             Nome do Estado deve ser preenchido!
         </div>
         <!-- <button type="submit" v-on:click.prevent="salvarEstado" >Incluir</button> -->
-        <button type="submit"  class="btn btn-success btn-sm" v-on:click.prevent="salvarEstado">Incluir</button>
+        <button type="submit"  class="btn btn-success btn-sm" v-on:click.prevent="salvarEstado">{{ getAcao }}</button>
 
         <!-- <button type="submit" v-on:click.prevent="cancelar" >Cancelar</button> -->
         <button type="submit" class="btn btn-secondary btn-sm" v-on:click.prevent="cancelar">Cancelar</button>
@@ -21,7 +21,7 @@
 import axios from "axios";
    export default{
         props:{
-            estado: Object
+            propsEstado: Object
         },
         data(){
             return {
@@ -32,18 +32,28 @@ import axios from "axios";
         },
         methods:{
             async salvarEstado(){
-                if(this.nome ==='' ){
+                if(this.nome === ''){
                     this.isInvalido = true;
                     return;
                 }
                 this.isInvalido = false;
 
+                if(this.id === "") {
+                    
                 const response = await axios.post("http://localhost:8080/estado", {
                          id:this.id,
                          nome:this.nome
                      });
-                console.log(response.data);
                 this.listaEstados = response.data;
+                }else{
+                    const response = await axios.put("http://localhost:8080/estado/"+this.id, {
+                         id:this.id,
+                         nome:this.nome
+                     });
+                this.listaEstados = response.data;
+                }
+
+               
 
                  this.$emit('salvar_estado',{
                          id:this.id,
@@ -61,10 +71,15 @@ import axios from "axios";
             
             },
         },
-        computed() {
-            if(this.estado){
-                this.id =this.estado.id;
-                this.nome =this.estado.nome;
+        mounted() {
+            if(this.propsEstado){
+                this.id =this.propsEstado.id;
+                this.nome =this.propsEstado.nome;
+            }
+        },
+        computed: {
+            getAcao(){
+                 return this.id === "" ? "Incluir" : "Alterar";
             }
         }
    }
