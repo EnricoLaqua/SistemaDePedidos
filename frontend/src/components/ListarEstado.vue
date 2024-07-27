@@ -18,7 +18,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="estado in listaEstados" :key="estado.id">
+            <tr v-for="estado in listaEstados" :key="estado.id" scope="row">
                 <td>
                     {{ estado.id }}
                 </td>
@@ -35,13 +35,44 @@
             </tbody>
         </table>
       </div>
-      <hr>
-      <h2>Paginação</h2>
-      <p><input type="text" v-model="pageNumber" placehoder="Número da página"> </p>
-      <p><button type="button" class="btn btn-primary btn-sm" @click.prevent="buscarEstados">Buscar</button></p>
+
+      <div class="container">
+  <div class="row justify-content-center">
+    <div class="col-auto">
+      <button v-for="pagina in totalPages" :key="pagina" @click.prevent="irPara(pagina)" class="btn btn-light ms-1">{{ pagina }}</button>
+    </div>
+    <div class="col-auto">
+      <input type="text" v-model="pageNumber" placeholder="Número da página" class="form-control" />
+    </div>
+    <div class="col-auto">
+      <select v-model="pageSize" class="form-select">
+        <option value="1">1</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <select v-model="property" class="form-select">
+        <option value="id">ID</option>
+        <option value="nome">Nome</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <select v-model="direction" class="form-select">
+        <option value="ASC">Crescente</option>
+        <option value="DESC">Decrescente</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button type="button" class="btn btn-success" @click.prevent="buscarEstados">
+        <i class="bi bi-binoculars"></i> Buscar
+      </button>
+    </div>
+  </div>
+</div>
     </div>
 </template>
-
 
 <script> 
 import FormEstado from './FormEstado.vue';
@@ -57,8 +88,12 @@ import axios from "axios";
                 formVisible:false,
                 mode: import.meta.env.MODE,
                 url: import.meta.env.VITE_APP_URL_API,
-                pageNumber:1
-            }
+                pageNumber:1,
+                pageSize:10,
+                direction:'ASC',
+                property:'id',
+                totalPages:0
+            };
         },
         methods:{
             async buscarEstados(){
@@ -66,9 +101,10 @@ import axios from "axios";
                 this.formVisible = false;
                 //buscar a lista de estados no servidor
                 // http://localhost:8080/estados 
-                const response = await axios.get(`http://localhost:8080/estados?pageNumber=${this.pageNumber}`);
+                const response = await axios.get(`http://localhost:8080/estados?pageNumber=${this.pageNumber}&pageSize=${this.pageSize}&direction=${this.direction}&property=${this.property}`);
                 console.log(response.data);
                 this.listaEstados = response.data.content;
+                this.totalPages = response.data.totalPages;
             },
             limpar(){
                 this.estadoEscolhido = null;
@@ -86,7 +122,11 @@ import axios from "axios";
                 const response = await axios.delete(`http://localhost:8080/estado/${id}`);
                 console.log(response.data);
                 this.buscarEstados();
-            }
+            },
+            irPara(pagina) {
+            this.pageNumber = pagina;
+            this.buscarEstados();
+            },
         } ,  
         mounted() {
             this.buscarEstados();
